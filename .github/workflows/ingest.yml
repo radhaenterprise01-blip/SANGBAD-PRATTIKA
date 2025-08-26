@@ -1,9 +1,9 @@
 name: Ingest news
 
 on:
-  workflow_dispatch:  # run manually from Actions tab
+  workflow_dispatch:   # run manually from Actions tab
   schedule:
-    - cron: "*/30 * * * *"  # optional: every 30 minutes (UTC)
+    - cron: "0 * * * *"  # run every hour
 
 permissions:
   contents: write
@@ -20,13 +20,8 @@ jobs:
         with:
           node-version: 20
 
-      # Install project deps (if package.json exists)
-      - name: Install dependencies
-        run: npm install
-
-      # Ensure OpenAI SDK is present (some repos may not have it in package.json)
-      - name: Add OpenAI SDK
-        run: npm install openai
+      - name: Install needed libraries
+        run: npm install node-fetch openai
 
       - name: Run ingest script
         env:
