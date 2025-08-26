@@ -1,0 +1,43 @@
+name: Ingest news
+
+on:
+  workflow_dispatch:  # run manually from Actions tab
+  schedule:
+    - cron: "*/30 * * * *"  # optional: every 30 minutes (UTC)
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install project deps (if package.json exists)
+      - name: Install dependencies
+        run: npm install
+
+      # Ensure OpenAI SDK is present (some repos may not have it in package.json)
+      - name: Add OpenAI SDK
+        run: npm install openai
+
+      - name: Run ingest script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GUARDIAN_API_KEY: ${{ secrets.GUARDIAN_API_KEY }}
+        run: node ingest.js
+
+      - name: Commit & push news.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/news.json
+          git commit -m "chore: update news $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+          git push
